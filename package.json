@@ -1,0 +1,8 @@
+{
+  "name": "retell-demo-salon",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "retell-sdk": "^1.2.0"
+  }
+}
