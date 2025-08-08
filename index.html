@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salon AI Assistant</title>
+  <style>
+    /* Basic reset and typography */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fef6f9 0%, #fffafc 100%);
+      color: #3a003a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      text-align: center;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: #8e046a;
+    }
+    p {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      background-color: #8e046a;
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #a50a7d;
+    }
+    .status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #5f1d42;
+    }
+  </style>
+  <!-- Load the Retell Web SDK from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/retell-client.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Salon AI Assistant Demo</h1>
+    <p>Click the button below to start a conversation with our AI receptionist.</p>
+    <button id="startCall">Start Call</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // This client instance will be used to start the web call.
+    const retellWebClient = new RetellWebClient();
+
+    // Update the status text on the page.
+    function setStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    // Fetch an access token from the Netlify serverless function.
+    async function fetchAccessToken() {
+      setStatus('Requesting access token…');
+      try {
+        const response = await fetch('/.netlify/functions/create-web-call');
+        const data = await response.json();
+        if (data.access_token) {
+          setStatus('Access token received. Connecting…');
+          return data.access_token;
+        } else {
+          throw new Error('Access token missing');
+        }
+      } catch (err) {
+        setStatus('Failed to get access token. Please contact support.');
+        console.error(err);
+        return null;
+      }
+    }
+
+    // Listen to events from the Retell client.
+    retellWebClient.on('call_started', () => {
+      setStatus('Call started. You can now talk to the AI.');
+    });
+    retellWebClient.on('call_ended', () => {
+      setStatus('Call ended. Thank you for trying our AI!');
+    });
+
+    // Start the call on button click.
+    document.getElementById('startCall').addEventListener('click', async () => {
+      const token = await fetchAccessToken();
+      if (!token) return;
+      try {
+        await retellWebClient.startCall({ accessToken: token });
+        setStatus('Connecting…');
+      } catch (err) {
+        setStatus('Error starting the call. Please try again later.');
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
